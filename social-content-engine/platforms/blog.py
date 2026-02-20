@@ -86,6 +86,7 @@ class BlogAdapter(PlatformAdapter):
         title: str = "",
         tags: List[str] = None,
         publish: bool = False,
+        image_url: str = "",
         **kwargs,
     ) -> PostResult:
         """Create a blog post in Supabase."""
@@ -103,6 +104,9 @@ class BlogAdapter(PlatformAdapter):
             "tags": tags or [],
             "status": "published" if publish else "draft",
         }
+
+        if image_url:
+            data["image_url"] = image_url
 
         if publish:
             data["published_at"] = datetime.now(timezone.utc).isoformat()

@@ -96,16 +96,19 @@ export default function Dashboard() {
 
   const handlePost = useCallback(
     async (platform: Platform, content: string) => {
-      const options: { title?: string; image_path?: string } = {};
+      const options: { title?: string; image_path?: string; image_url?: string } = {};
       if (platform === "instagram" && imagePath) {
         options.image_path = imagePath;
+      }
+      if (platform === "blog" && imageUrl) {
+        options.image_url = imageUrl;
       }
       const result = await postContent(platform, content, options);
       if (!result.success) {
         throw new Error(result.error || "Post failed");
       }
     },
-    [imagePath]
+    [imagePath, imageUrl]
   );
 
   const hasContent = Object.keys(generatedContent).length > 0;

@@ -90,6 +90,7 @@ class PostRequest(BaseModel):
     content: str
     title: Optional[str] = None
     image_path: Optional[str] = None
+    image_url: Optional[str] = None
     tags: Optional[List[str]] = None
 
 
@@ -158,6 +159,8 @@ async def post_content(platform: str, req: PostRequest):
         kwargs["title"] = req.title or ""
         kwargs["tags"] = req.tags or []
         kwargs["publish"] = True
+        if req.image_url:
+            kwargs["image_url"] = req.image_url
 
     result = await adapters[platform].post(req.content, **kwargs)
     return {

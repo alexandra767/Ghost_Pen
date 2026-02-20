@@ -123,6 +123,7 @@ CREATE TABLE blog_posts (
     content TEXT NOT NULL,
     excerpt TEXT,
     tags TEXT[] DEFAULT '{}',
+    image_url TEXT,
     status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     published_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),

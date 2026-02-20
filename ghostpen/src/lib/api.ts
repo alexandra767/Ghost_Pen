@@ -64,7 +64,7 @@ export async function generateImage(
 export async function postContent(
   platform: string,
   content: string,
-  options?: { title?: string; image_path?: string; tags?: string[] }
+  options?: { title?: string; image_path?: string; image_url?: string; tags?: string[] }
 ): Promise<PostResult> {
   return apiFetch<PostResult>(`/post/${platform}`, {
     method: "POST",
