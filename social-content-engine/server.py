@@ -7,12 +7,6 @@ Runs on port 8001 (model server uses 8000).
 
 Start: python server.py
   or:  uvicorn server:app --host 0.0.0.0 --port 8001
-
-Endpoints:
-  POST /generate       - Generate content for a topic
-  POST /post/{platform} - Post content to a platform
-  GET  /platforms      - List configured platforms
-  GET  /health         - Health check
 """
 
 from fastapi import FastAPI, HTTPException
@@ -36,7 +30,7 @@ from config import (
     ENGINE_PORT,
 )
 from generator import ContentGenerator
-from platforms.blog import BlogAdapter
+from platforms.blog import BlogAdapter, LocalBlogStore
 from platforms.twitter import TwitterAdapter
 from platforms.instagram import InstagramAdapter
 from platforms.base import PlatformAdapter
@@ -53,13 +47,25 @@ app.add_middleware(
 # Initialize
 generator = ContentGenerator()
 adapters: Dict[str, PlatformAdapter] = {}
+blog_store = None  # Will be BlogAdapter or LocalBlogStore
 
 
 @app.on_event("startup")
 async def startup():
+    global blog_store
     """Initialize platform adapters on startup."""
     if SUPABASE_URL and SUPABASE_KEY:
-        adapters["blog"] = BlogAdapter(SUPABASE_URL, SUPABASE_KEY)
+        blog_adapter = BlogAdapter(SUPABASE_URL, SUPABASE_KEY)
+        adapters["blog"] = blog_adapter
+        blog_store = blog_adapter
+        print("Blog: Using Supabase")
+    else:
+        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        local_store = LocalBlogStore(data_dir)
+        adapters["blog"] = local_store
+        blog_store = local_store
+        print("Blog: Using local JSON storage (Supabase not configured)")
+
     if TWITTER_CONSUMER_KEY and TWITTER_ACCESS_TOKEN:
         adapters["twitter"] = TwitterAdapter(
             TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET,
@@ -170,6 +176,39 @@ async def post_content(platform: str, req: PostRequest):
         "url": result.url,
         "error": result.error,
     }
+
+
+# === Blog Read/Delete Endpoints ===
+
+@app.get("/api/blog/posts")
+async def get_blog_posts():
+    """Get all published blog posts."""
+    if not blog_store:
+        return []
+    posts = await blog_store.get_posts()
+    return posts
+
+
+@app.get("/api/blog/posts/{slug}")
+async def get_blog_post(slug: str):
+    """Get a single blog post by slug."""
+    if not blog_store:
+        raise HTTPException(404, "Blog not configured")
+    post = await blog_store.get_post_by_slug(slug)
+    if not post:
+        raise HTTPException(404, "Post not found")
+    return post
+
+
+@app.delete("/api/blog/posts/{post_id}")
+async def delete_blog_post(post_id: str):
+    """Delete a blog post by ID."""
+    if not blog_store:
+        raise HTTPException(404, "Blog not configured")
+    success = await blog_store.delete_post(post_id)
+    if not success:
+        raise HTTPException(404, "Post not found")
+    return {"success": True, "deleted": post_id}
 
 
 @app.get("/platforms")

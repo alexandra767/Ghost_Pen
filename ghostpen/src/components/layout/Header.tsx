@@ -13,14 +13,14 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-border px-6 py-4">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-            <PenLine className="w-5 h-5 text-gold" />
+          <div className="w-10 h-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <PenLine className="w-5 h-5 text-terracotta" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-space)" }}>
+            <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-playfair)" }}>
               GhostPen
             </h1>
             <p className="text-xs text-muted">AI content in your voice</p>
@@ -35,9 +35,9 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors ${
                   isActive
-                    ? "bg-gold/10 text-gold"
+                    ? "bg-foreground text-background"
                     : "text-muted hover:text-foreground hover:bg-surface-hover"
                 }`}
               >

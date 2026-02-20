@@ -41,7 +41,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm border border-border p-6 space-y-5">
       {/* Topic Input */}
       <div>
         <label className="block text-sm font-medium text-muted mb-2">Topic</label>
@@ -49,7 +49,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="What do you want to write about?"
-          className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted/50 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-colors min-h-[80px]"
+          className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted/50 focus:outline-none focus:border-terracotta/50 focus:ring-1 focus:ring-terracotta/20 transition-colors min-h-[80px]"
           rows={2}
         />
       </div>
@@ -63,10 +63,10 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
               key={p.value}
               type="button"
               onClick={() => togglePlatform(p.value)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all ${
                 selectedPlatforms.includes(p.value)
-                  ? "bg-gold/10 border-gold/30 text-gold"
-                  : "bg-surface border-border text-muted hover:border-border hover:bg-surface-hover"
+                  ? "bg-foreground text-background"
+                  : "bg-secondary border border-border text-muted hover:bg-surface-hover"
               }`}
             >
               {p.icon}
@@ -83,7 +83,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
           <select
             value={tone}
             onChange={(e) => setTone(e.target.value as Tone)}
-            className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-gold/50 transition-colors"
+            className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:border-terracotta/50 transition-colors"
           >
             {TONES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -105,7 +105,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
               step={100}
               value={wordCount}
               onChange={(e) => setWordCount(Number(e.target.value))}
-              className="w-full mt-2 accent-gold"
+              className="w-full mt-2 accent-terracotta"
             />
             <div className="flex justify-between text-xs text-muted mt-1">
               <span>200</span>
@@ -119,7 +119,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
       <button
         type="submit"
         disabled={isLoading || !topic.trim() || selectedPlatforms.length === 0}
-        className="w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold-dim text-background font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 bg-terracotta hover:bg-terracotta-dark text-white font-semibold py-3 px-6 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <>

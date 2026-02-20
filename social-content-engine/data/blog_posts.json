@@ -1,0 +1,53 @@
+[
+  {
+    "id": "53f69e5c-9d18-4abe-8840-481e582345b4",
+    "title": "My First Week with the DGX Spark",
+    "slug": "my-first-week-with-the-dgx-spark",
+    "content": "# My First Week with the DGX Spark\n\nI have been running AI models at home for a while now, but nothing prepared me for the DGX Spark. This little machine from NVIDIA sits on my desk like a compact PC tower, but under the hood it has 128GB of unified memory and enough compute to run a 120 billion parameter model without breaking a sweat.\n\n## Setting It Up\n\nThe setup was straightforward. Plugged it in, connected to my network, and within an hour I had Ubuntu running with Ollama installed. The first model I pulled was GPT-OSS 120B \u2014 a fully open-source large language model that rivals the big commercial ones.\n\nThe fact that I can run inference on a 120B model locally, without sending my data anywhere, still feels surreal. No API keys. No rate limits. No monthly bills that scale with usage. Just my hardware, my models, my data.\n\n## What I Have Running\n\nRight now my Spark handles:\n\n- **GPT-OSS 120B** for text generation and content creation\n- **Qwen 2.5 72B** as a secondary model for comparison\n- **A social content engine** that generates blog posts, tweets, and Instagram captions in my voice\n- **Image generation** via Gemini API for matching visuals\n\nAll of this runs simultaneously without the machine even getting loud.\n\n## The Real Value\n\nThe DGX Spark is not cheap. But when I look at what I would spend on API calls to run a 120B model at the volume I need \u2014 it pays for itself quickly. More importantly, I own my infrastructure. My models are not going to get deprecated or rate-limited by someone else's business decisions.\n\nFor anyone serious about running AI locally, this is the hardware to get. Not a gaming GPU hack. Not a cloud VM you rent by the hour. Real AI compute, on your desk, under your control.\n\nThat is the future I signed up for.",
+    "excerpt": "I have been running AI models at home for a while now, but nothing prepared me for the DGX Spark. This little machine from NVIDIA sits on my desk like a compact PC tower, but under the hood it has...",
+    "tags": [
+      "AI",
+      "Hardware",
+      "DGX Spark"
+    ],
+    "image_url": "/images/ghostpen-dgx-spark-setup.png",
+    "status": "published",
+    "published_at": "2026-02-20T01:40:58.625760+00:00",
+    "created_at": "2026-02-20T01:40:58.625760+00:00",
+    "updated_at": "2026-02-20T01:40:58.625760+00:00"
+  },
+  {
+    "id": "107fc7e4-9728-43d1-87f1-0a7b143ae2e4",
+    "title": "Why I Left the City for Small Town Pennsylvania",
+    "slug": "why-i-left-the-city-for-small-town-pennsylvania",
+    "content": "# Why I Left the City for Small Town Pennsylvania\n\nPeople ask me all the time why I moved to a small town in rural Pennsylvania. They look at me like I made a mistake \u2014 like leaving the city means giving up on ambition or opportunity. The reality is the opposite.\n\n## Finding the Right Pace\n\nI grew up surrounded by noise. Not just the literal noise of traffic and construction, but the mental noise of always keeping up, always comparing, always performing. Moving to Ridgway changed that.\n\nRidgway is the kind of place where you can sit on your porch and hear nothing but birds and wind through the trees. Where your neighbors wave when they drive by. Where the Elk County courthouse is the tallest building in town and nobody is trying to change that.\n\n## The Outdoors Are Right There\n\nOne of the biggest draws was access to nature. The Allegheny National Forest is practically in my backyard. Hiking trails, fishing streams, campgrounds \u2014 all within a short drive. In the city, nature was a weekend trip. Here, it is daily life.\n\nFly fishing has become one of my favorite things. Standing in a cold stream early in the morning with nobody around \u2014 that is a kind of peace you cannot buy in a city apartment.\n\n## Remote Work Changed Everything\n\nThe reason small town living works for me is remote work. I do not need to be in an office. My DGX Spark runs my AI projects from home. My internet is fast enough. My cost of living is a fraction of what it was.\n\nI traded a one-bedroom apartment for a house with a yard and a workshop. I traded a two-hour commute for a walk to the coffee shop downtown. The math was not even close.\n\n## It Is Not for Everyone\n\nI am not going to pretend small town life is perfect. The nearest Target is an hour away. Restaurants close early. The dating pool is tiny. But for me, the tradeoffs are worth it.\n\nWhen I look out my window and see mountains instead of buildings, I know I made the right call.",
+    "excerpt": "People ask me all the time why I moved to a small town in rural Pennsylvania. They look at me like I made a mistake \u2014 like leaving the city means giving up on ambition or opportunity. The reality is...",
+    "tags": [
+      "Life",
+      "Pennsylvania",
+      "Remote Work"
+    ],
+    "image_url": "/images/ghostpen-pennsylvania-autumn.png",
+    "status": "published",
+    "published_at": "2026-02-20T01:41:56.474784+00:00",
+    "created_at": "2026-02-20T01:41:56.474784+00:00",
+    "updated_at": "2026-02-20T01:41:56.474784+00:00"
+  },
+  {
+    "id": "26e9aae1-b143-4dfa-87ec-90988846194b",
+    "title": "Training Your Own AI Clone - What I Learned",
+    "slug": "training-your-own-ai-clone-what-i-learned",
+    "content": "# Training Your Own AI Clone - What I Learned\n\nI have spent the last few months working on something that sounds like science fiction: training an AI model to write like me. Not in a generic \"sounds human\" way, but specifically capturing my voice, my patterns, my personality. Here is what I have learned so far.\n\n## The Data Is Everything\n\nThe single most important factor in personality fine-tuning is the training data. I started by collecting over 1,200 of my actual text messages - the casual, unfiltered way I communicate with friends and family. Then I added personal Q&A pairs about my life, interests, and opinions.\n\nThe key insight: you need data that captures how you actually communicate, not how you think you communicate. My text messages are short, direct, and skip formalities. My writing is different from my texting. Both need to be represented.\n\n## Cleaning Data Is Harder Than Collecting It\n\nRaw data is messy. My text messages had typos, autocorrect mistakes, inside jokes, and references that only make sense with context. Cleaning and formatting all of this into proper training examples took longer than collecting it.\n\nI also had to actively filter out AI-sounding patterns. When you train on conversation data, you need to make sure the model learns your side of the conversation, not generic AI responses.\n\n## The Hardware Makes It Possible\n\nFine-tuning a 120 billion parameter model is not something you can do on a gaming laptop. My DGX Spark with 128GB of unified memory makes it possible to run QLoRA training without needing cloud compute.\n\nThe training takes about 6-11 hours per run. That sounds like a lot, but compared to the weeks it would take on lesser hardware - or the hundreds of dollars in cloud GPU time - it is a bargain.\n\n## Results So Far\n\nThe fine-tuned model is not perfect yet, but it is getting there. It picks up my tendency to be direct, my use of dashes for emphasis, and my habit of starting paragraphs with short declarative sentences. It does not add LOLs or emojis and it avoids the corporate-speak that plagues most AI writing.\n\nThe next step is more training data and more epochs. Personality cloning is an iterative process - you train, evaluate, adjust, and train again.\n\n## Why It Matters\n\nThe goal is not to replace myself. It is to have a tool that can draft content in my voice so I can focus on editing and ideas rather than staring at a blank page. An AI writing assistant that actually sounds like me, not like every other AI assistant.",
+    "excerpt": "I have spent the last few months working on something that sounds like science fiction: training an AI model to write like me. Not in a generic \"sounds human\" way, but specifically capturing my...",
+    "tags": [
+      "AI",
+      "Training",
+      "Machine Learning"
+    ],
+    "image_url": "/images/ghostpen-ai-neural-network.png",
+    "status": "published",
+    "published_at": "2026-02-20T01:43:44.859854+00:00",
+    "created_at": "2026-02-20T01:43:44.859854+00:00",
+    "updated_at": "2026-02-20T01:43:44.859854+00:00"
+  }
+]

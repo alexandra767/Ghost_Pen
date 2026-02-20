@@ -114,7 +114,7 @@ export default function Dashboard() {
   const hasContent = Object.keys(generatedContent).length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
@@ -140,7 +140,10 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Content Cards */}
             <div className="lg:col-span-2 space-y-4">
-              <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-space)" }}>
+              <h2
+                className="text-lg font-semibold"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
                 Generated Content
               </h2>
               {selectedPlatforms.map((platform) =>
@@ -158,7 +161,10 @@ export default function Dashboard() {
 
             {/* Image Preview */}
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-space)" }}>
+              <h2
+                className="text-lg font-semibold"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
                 Image
               </h2>
               <ImagePreview
@@ -173,8 +179,8 @@ export default function Dashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-muted">
+      <footer className="border-t border-border px-6 py-4 bg-foreground text-background">
+        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-background/60">
           <span>GhostPen - AI writes, you own it</span>
           <span>Powered by GPT-OSS 120B</span>
         </div>

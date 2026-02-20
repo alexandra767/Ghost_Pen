@@ -83,3 +83,33 @@ export async function getHealth(): Promise<HealthResponse> {
 export function getImageUrl(imageUrl: string): string {
   return `${API_BASE}${imageUrl}`;
 }
+
+// === Blog API ===
+
+export interface BlogPostAPI {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  tags: string[];
+  image_url: string | null;
+  status: string;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getBlogPostsAPI(): Promise<BlogPostAPI[]> {
+  return apiFetch<BlogPostAPI[]>("/api/blog/posts");
+}
+
+export async function getBlogPostBySlugAPI(slug: string): Promise<BlogPostAPI> {
+  return apiFetch<BlogPostAPI>(`/api/blog/posts/${slug}`);
+}
+
+export async function deleteBlogPost(postId: string): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>(`/api/blog/posts/${postId}`, {
+    method: "DELETE",
+  });
+}

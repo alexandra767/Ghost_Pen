@@ -15,14 +15,20 @@ Later, you can fine-tune GPT-OSS 120B with your personality data (text messages,
 ```
 gptoss-alexandra-project/
 ├── PROJECT_PLAN.md                    ← YOU ARE HERE
+├── .env                               ← BACKEND ENV VARS (Supabase, Gemini, model)
 ├── ghostpen/                          ← REACT FRONTEND (use now)
+│   ├── .env.local                     # Frontend env (API URL, Supabase anon key)
 │   ├── src/app/page.tsx               # Dashboard (main page)
 │   ├── src/app/layout.tsx             # Root layout, fonts, theme
-│   ├── src/app/globals.css            # Dark writer theme
+│   ├── src/app/globals.css            # Bougie Coffee warm earth tone theme
+│   ├── src/app/blog/page.tsx          # Blog listing page (client component)
+│   ├── src/app/blog/[slug]/page.tsx   # Individual blog post page (client component)
 │   ├── src/components/generate/       # TopicForm, ContentCard, ImagePreview
+│   ├── src/components/blog/           # BlogCard, BlogList
+│   ├── src/components/shared/         # PageHero
 │   ├── src/components/layout/         # Header
 │   ├── src/components/status/         # PlatformStatus
-│   ├── src/lib/api.ts                 # API client for backend
+│   ├── src/lib/api.ts                 # API client for backend (blog CRUD + content gen)
 │   ├── src/types/index.ts             # TypeScript interfaces
 │   └── package.json                   # Next.js 15 + Tailwind + Lucide
 ├── training/                          ← FOR LATER (fine-tuning)
@@ -75,33 +81,7 @@ This installs: httpx, fastapi, uvicorn, tweepy, instagrapi, supabase
 
 ## Step 3: Set Up Environment Variables
 
-Create this file:
-
-```bash
-nano /home/alexandratitus767/gptoss-alexandra-project/.env
-```
-
-Paste this and fill in your values:
-
-```bash
-# Model - already configured for Ollama (no changes needed)
-export MODEL_ENDPOINT="http://localhost:11434"
-export MODEL_NAME="gpt-oss:120b"
-
-# Supabase (blog) - get these from your Supabase project settings
-export SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
-export SUPABASE_KEY="your-service-role-key-here"
-
-# Twitter/X - get these from developer.twitter.com
-export TWITTER_CONSUMER_KEY=""
-export TWITTER_CONSUMER_SECRET=""
-export TWITTER_ACCESS_TOKEN=""
-export TWITTER_ACCESS_TOKEN_SECRET=""
-
-# Instagram
-export INSTAGRAM_USERNAME=""
-export INSTAGRAM_PASSWORD=""
-```
+The `.env` file is already created at `/home/alexandratitus767/gptoss-alexandra-project/.env` with all credentials configured.
 
 Load the env vars before running anything:
 
@@ -109,11 +89,28 @@ Load the env vars before running anything:
 source /home/alexandratitus767/gptoss-alexandra-project/.env
 ```
 
-## Step 4: Set Up Supabase Blog
+The `.env` file contains:
+- `MODEL_ENDPOINT` and `MODEL_NAME` — Ollama GPT-OSS 120B connection
+- `SUPABASE_URL` and `SUPABASE_KEY` — Supabase project "Alexandra_GhostPen" (service_role key)
+- `GEMINI_API_KEY` — Google Gemini API for image generation
+- `TWITTER_*` keys — fill in when ready
+- `INSTAGRAM_*` keys — fill in when ready
 
-1. Go to https://supabase.com and create a project (or use existing)
-2. Go to **SQL Editor** in the Supabase dashboard
-3. Paste and run this SQL:
+The frontend also has its own env at `ghostpen/.env.local`:
+- `NEXT_PUBLIC_API_URL=http://192.168.1.187:8001` — backend URL (uses Spark's LAN IP so MacBook browser can reach it)
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key (for client-side reads)
+
+## Step 4: Supabase Blog (DONE)
+
+Supabase project **"Alexandra_GhostPen"** is set up and working.
+
+- **Project URL:** `https://vngzdpwvurdehtctfbxj.supabase.co`
+- **Database table:** `blog_posts` with RLS policies
+- **Backend** uses the `service_role` key (full CRUD access)
+- **Frontend** uses the `anon` key (read-only published posts)
+
+The `blog_posts` table schema:
 
 ```sql
 CREATE TABLE blog_posts (
@@ -129,19 +126,9 @@ CREATE TABLE blog_posts (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public can read published posts"
-ON blog_posts FOR SELECT USING (status = 'published');
-
-CREATE POLICY "Service role can manage posts"
-ON blog_posts FOR ALL USING (true);
 ```
 
-4. Get your credentials from **Project Settings > API**:
-   - **Project URL** → put in `SUPABASE_URL`
-   - **service_role key** (not anon key) → put in `SUPABASE_KEY`
+**Fallback:** If Supabase credentials aren't configured, the backend automatically falls back to `LocalBlogStore` (stores posts in `social-content-engine/data/blog_posts.json`).
 
 ## Step 5: Set Up Twitter/X (When Ready)
 
@@ -299,10 +286,11 @@ GhostPen is a React web dashboard for generating and posting content — no comm
 
 ## Tech Stack
 
-- **Framework:** Next.js 15 + TypeScript
-- **Styling:** Tailwind CSS v4 (dark writer theme)
+- **Framework:** Next.js 15 + TypeScript (App Router)
+- **Styling:** Tailwind CSS v4 with `@theme inline` (no tailwind.config — all in CSS)
 - **Icons:** Lucide React
-- **Fonts:** Space Grotesk (headings) + Inter (body)
+- **Fonts:** Playfair Display (serif headings) + Inter (body)
+- **Design:** Bougie Coffee-inspired warm earth tone palette
 
 ## How to Start GhostPen
 
@@ -313,8 +301,8 @@ You need TWO terminals — one for the backend, one for the frontend.
 ```bash
 cd /home/alexandratitus767/gptoss-alexandra-project/social-content-engine
 source venv/bin/activate
-source /home/alexandratitus767/gptoss-alexandra-project/.env  # if you have platform keys
-GEMINI_API_KEY=your-gemini-key-here python server.py
+source /home/alexandratitus767/gptoss-alexandra-project/.env
+python server.py
 ```
 
 Backend runs at **http://localhost:8001**
@@ -353,19 +341,25 @@ Open your browser and go to: **http://192.168.1.187:3000**
 - **Editable image prompt** — tweak the prompt and regenerate if the image isn't right
 - **Copy button** — copy content to clipboard
 - **Edit button** — edit content inline before posting
+- **Delete button** — delete blog posts (with confirmation dialog) from both the blog list and individual post pages
 - **Platform status** — green/red dots show which platforms are connected and if the model is reachable
+- **Blog pages** — full blog listing page (`/blog`) and individual post pages (`/blog/[slug]`) with hero images, tag filters, and related posts
+- **Supabase-backed** — all blog posts stored in Supabase with automatic fallback to local JSON storage
 
 ## Backend API Endpoints (for GhostPen)
 
-These endpoints were added to `server.py` for GhostPen's image generation flow:
+These endpoints are in `server.py`:
 
 | Endpoint | Method | What It Does |
 |---|---|---|
-| `/generate` | POST | Generate text content (existing) |
-| `/post/{platform}` | POST | Post content to a platform (existing) |
+| `/generate` | POST | Generate text content |
+| `/post/{platform}` | POST | Post content to a platform |
 | `/generate-image-prompt` | POST | GPT-OSS creates an image prompt from your content |
 | `/generate-image` | POST | Gemini API generates an image from the prompt |
 | `/images/{filename}` | GET | Serves generated images to the browser |
+| `/api/blog/posts` | GET | List all published blog posts (from Supabase) |
+| `/api/blog/posts/{slug}` | GET | Get a single blog post by slug |
+| `/api/blog/posts/{post_id}` | DELETE | Delete a blog post by UUID |
 | `/platforms` | GET | Platform connection status |
 | `/health` | GET | Backend + model health check |
 
@@ -382,9 +376,45 @@ This is the key feature. When you click Generate:
 7. You can edit the prompt and regenerate if needed
 8. For Instagram posts, the image auto-attaches when you click Post
 
-## Design
+## Design System (Bougie Coffee Style)
 
-- **Dark writer theme** — ink black (#0D0D0D), warm paper (#F5F0EB), pen gold (#C9A84C)
+### Color Palette
+
+| Name | Hex | CSS Variable | Usage |
+|------|-----|-------------|-------|
+| **Cream** | `#FAF7F2` | `--background` | Page background |
+| **Espresso** | `#3C2415` | `--foreground` | Text, dark elements |
+| **Terracotta** | `#C4704B` | `--terracotta` | Primary accent, CTAs, links |
+| **Terracotta Dark** | `#A85D3C` | `--terracotta-dark` | Hover state for accent |
+| **Sage** | `#7A8B6F` | `--sage` | Success indicators, secondary accent |
+| **Red** | `#C45B4B` | `--red` | Errors, over-limit warnings |
+| **White** | `#FFFFFF` | `--surface` | Cards, panels |
+| **Light Cream** | `#F0EBE3` | `--surface-hover` / `--secondary` | Hover states, secondary backgrounds |
+| **Warm Sand** | `#E8E0D6` | `--border` | Borders, dividers |
+| **Warm Gray** | `#8B7E74` | `--muted` | Muted text, meta info |
+
+### Typography
+
+- **Headings:** Playfair Display (serif) — elegant, editorial feel
+- **Body:** Inter (sans-serif) — clean, readable
+- All `h1`-`h6` elements default to serif via CSS
+
+### Component Patterns
+
+- **Navbar:** Sticky, `bg-background/80 backdrop-blur-md`, rounded-full nav pills
+- **Cards:** White bg (`bg-surface`), no border or `border-0`, `shadow-sm`, `hover:shadow-md`
+- **Buttons:** Rounded-full pills, terracotta primary, espresso/cream toggles
+- **Filter pills:** `rounded-full`, active = `bg-foreground text-background`, inactive = `bg-secondary`
+- **Tags/badges:** `rounded-full`, `bg-terracotta/10 text-terracotta` or `bg-terracotta text-white`
+- **Hero sections:** Full-width with image + gradient overlay (`from-foreground/80`)
+- **Blog cards:** Image with scale-105 hover, serif titles, shadow elevation
+- **Footer:** `bg-foreground text-background` (dark espresso with cream text)
+
+### Layout
+
+- **Container:** `max-w-6xl` (dashboard) / `max-w-7xl` (blog) centered with `mx-auto`
+- **Section padding:** `py-12 px-4 sm:px-6 lg:px-8`
+- **Grid:** `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3` for card layouts
 - **Clean dashboard** — single page, everything visible at once
 - **Responsive** — works on desktop and mobile
 
@@ -685,7 +715,8 @@ PLATFORM_PROMPTS["linkedin"] = {
 # 1. Start backend (Terminal 1)
 cd /home/alexandratitus767/gptoss-alexandra-project/social-content-engine
 source venv/bin/activate
-GEMINI_API_KEY=your-key python server.py
+source /home/alexandratitus767/gptoss-alexandra-project/.env
+python server.py
 
 # 2. Start frontend (Terminal 2)
 cd /home/alexandratitus767/gptoss-alexandra-project/ghostpen
@@ -743,7 +774,9 @@ python cli.py post instagram --content "caption" --image photo.jpg    # Post exi
 | Personality prompts | `social-content-engine/prompts/templates.py` |
 | Platform adapters | `social-content-engine/platforms/` |
 | Config | `social-content-engine/config.py` |
-| Env vars | `.env` (create this) |
+| Backend env vars | `.env` (configured with Supabase, Gemini, model) |
+| Frontend env vars | `ghostpen/.env.local` (API URL, Supabase anon key) |
+| Supabase project | "Alexandra_GhostPen" at `vngzdpwvurdehtctfbxj.supabase.co` |
 | Your training data | `/home/alexandratitus767/ai-clone-training/data/` |
 | Your text messages | `/home/alexandratitus767/ai-clone-training/data/alexandra_texts.json` |
 | Ollama model | `gpt-oss:120b` (already installed) |

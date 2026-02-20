@@ -1,23 +1,34 @@
-import { getBlogPosts } from "@/lib/supabase";
+"use client";
+
+import { useEffect, useState } from "react";
 import { BlogList } from "@/components/blog/BlogList";
 import { PageHero } from "@/components/shared/PageHero";
 import Header from "@/components/layout/Header";
 import Link from "next/link";
-import { PenLine } from "lucide-react";
-import type { Metadata } from "next";
+import { PenLine, Loader2 } from "lucide-react";
+import { getBlogPostsAPI, type BlogPostAPI } from "@/lib/api";
 
-export const metadata: Metadata = {
-  title: "Blog - GhostPen",
-  description: "AI-generated blog posts written in Alexandra's voice.",
-};
+export default function BlogPage() {
+  const [posts, setPosts] = useState<BlogPostAPI[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export const revalidate = 60;
+  const fetchPosts = async () => {
+    try {
+      const data = await getBlogPostsAPI();
+      setPosts(data);
+    } catch (err) {
+      console.error("Failed to fetch posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-export default async function BlogPage() {
-  const posts = await getBlogPosts();
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <PageHero
         title="Blog"
@@ -25,27 +36,33 @@ export default async function BlogPage() {
       />
 
       <section className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-7xl">
           {/* Action bar */}
           <div className="flex items-center justify-between mb-8">
             <p className="text-sm text-muted">
-              {posts.length} {posts.length === 1 ? "post" : "posts"} published
+              {loading ? "Loading..." : `${posts.length} ${posts.length === 1 ? "post" : "posts"} published`}
             </p>
             <Link
               href="/"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-gold/10 text-gold hover:bg-gold/20 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-terracotta text-white hover:bg-terracotta-dark transition-colors"
             >
               <PenLine className="w-4 h-4" />
               Create New Post
             </Link>
           </div>
 
-          <BlogList posts={posts} />
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 animate-spin text-terracotta" />
+            </div>
+          ) : (
+            <BlogList posts={posts} onPostDeleted={fetchPosts} />
+          )}
         </div>
       </section>
 
-      <footer className="border-t border-border px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-muted">
+      <footer className="border-t border-border px-6 py-4 bg-foreground text-background">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-background/60">
           <span>GhostPen - AI writes, you own it</span>
           <span>Powered by GPT-OSS 120B</span>
         </div>
