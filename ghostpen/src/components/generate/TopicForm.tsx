@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, BookOpen, Twitter, Instagram, Loader2 } from "lucide-react";
+import { Sparkles, BookOpen, Twitter, Instagram, Loader2, MapPin } from "lucide-react";
 import type { Platform, Tone } from "@/types";
 
 interface TopicFormProps {
@@ -22,6 +22,21 @@ const PLATFORMS: { value: Platform; label: string; icon: React.ReactNode }[] = [
   { value: "instagram", label: "Instagram", icon: <Instagram className="w-4 h-4" /> },
 ];
 
+const WANDERLINK_TOPICS = [
+  "How WanderLink's AI helps you find hidden gems most tourists miss",
+  "Why I built an emergency SOS feature into a travel app (and made it free)",
+  "Planning your next trip in 5 minutes with AI-powered itineraries",
+  "The end of 20 open browser tabs: how one app replaced my entire travel toolkit",
+  "Meeting fellow travelers safely with WanderLink's Nearby feature",
+  "How WanderLink's AR discovery lets you point your camera and explore",
+  "Budget travel made easy: splitting bills and tracking expenses on the go",
+  "From solo founder to App Store: the story behind WanderLink",
+  "5 hidden gem destinations WanderLink's AI recommends for winter travel",
+  "Why every solo traveler needs a safety-first travel companion app",
+  "WanderLink's Daily Digest: your personal AI travel concierge",
+  "Walking tours, local food, and off-the-beaten-path adventures with WanderLink",
+];
+
 export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
   const [topic, setTopic] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["blog", "twitter", "instagram"]);
@@ -40,11 +55,27 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
     onGenerate(topic, selectedPlatforms, tone, wordCount);
   };
 
+  const [showWanderLink, setShowWanderLink] = useState(false);
+
   return (
     <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm border border-border p-6 space-y-5">
       {/* Topic Input */}
       <div>
-        <label className="block text-sm font-medium text-muted mb-2">Topic</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-muted">Topic</label>
+          <button
+            type="button"
+            onClick={() => setShowWanderLink(!showWanderLink)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              showWanderLink
+                ? "bg-blue-500 text-white"
+                : "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+            }`}
+          >
+            <MapPin className="w-3 h-3" />
+            WanderLink Topics
+          </button>
+        </div>
         <textarea
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
@@ -53,6 +84,28 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
           rows={2}
         />
       </div>
+
+      {/* WanderLink Quick Topics */}
+      {showWanderLink && (
+        <div className="bg-blue-950 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-sm font-medium text-white mb-3">Click a topic to use it:</p>
+          <div className="flex flex-wrap gap-2">
+            {WANDERLINK_TOPICS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setTopic(t);
+                  setShowWanderLink(false);
+                }}
+                className="text-sm px-3 py-2 rounded-full bg-blue-600/30 text-white hover:bg-blue-500/50 transition-colors text-left"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Platform Selection */}
       <div>
@@ -65,7 +118,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
               onClick={() => togglePlatform(p.value)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all ${
                 selectedPlatforms.includes(p.value)
-                  ? "bg-foreground text-background"
+                  ? "bg-terracotta text-white ring-2 ring-terracotta/30"
                   : "bg-secondary border border-border text-muted hover:bg-surface-hover"
               }`}
             >

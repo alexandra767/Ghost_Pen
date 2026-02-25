@@ -51,29 +51,35 @@ export default function Dashboard() {
       setSelectedPlatforms(platforms);
 
       try {
-        // Generate content for all selected platforms
-        let result: GenerateResponse;
+        // Generate each platform separately so cards appear as they finish
+        // Order: twitter first (fastest), then instagram, then blog (slowest)
+        const ordered = [...platforms].sort((a, b) => {
+          const priority: Record<string, number> = { twitter: 0, instagram: 1, blog: 2 };
+          return (priority[a] ?? 1) - (priority[b] ?? 1);
+        });
 
-        if (platforms.length === 3) {
-          result = await generateContent(topic, "all", tone, wordCount);
-        } else {
-          // Generate one at a time for partial selection
-          const content: Record<string, string> = {};
-          for (const p of platforms) {
+        let firstContent = "";
+        let firstPlatform = platforms[0];
+
+        for (const p of ordered) {
+          try {
             const r = await generateContent(topic, p, tone, wordCount);
-            Object.assign(content, r.content);
+            setGeneratedContent((prev) => ({ ...prev, ...r.content }));
+            if (!firstContent && r.content[p] && !r.content[p].startsWith("[ERROR")) {
+              firstContent = r.content[p];
+              firstPlatform = p;
+            }
+          } catch (err) {
+            console.error(`Generation failed for ${p}:`, err);
+            setGeneratedContent((prev) => ({ ...prev, [p]: `[ERROR: ${err instanceof Error ? err.message : "Failed"}]` }));
           }
-          result = { content, posted: {} };
         }
 
-        setGeneratedContent(result.content);
-
-        // Auto-generate image from the first available content
-        const firstContent = result.content[platforms[0]] || Object.values(result.content)[0];
-        if (firstContent && !firstContent.startsWith("[ERROR")) {
+        // Auto-generate image from the first successful content
+        if (firstContent) {
           setIsGeneratingImage(true);
           try {
-            const promptResult = await generateImagePrompt(firstContent, platforms[0]);
+            const promptResult = await generateImagePrompt(firstContent, firstPlatform);
             setImagePrompt(promptResult.image_prompt);
 
             const imgResult = await generateImage(promptResult.image_prompt);

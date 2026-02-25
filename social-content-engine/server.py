@@ -229,6 +229,13 @@ async def list_platforms():
     return status
 
 
+@app.get("/topics/wanderlink")
+async def wanderlink_topics():
+    """Get suggested WanderLink content topics."""
+    from prompts.wanderlink import WANDERLINK_TOPICS
+    return {"topics": WANDERLINK_TOPICS}
+
+
 @app.get("/health")
 async def health():
     model_ok = await generator.health_check()
@@ -264,7 +271,7 @@ async def generate_image_prompt(req: ImagePromptRequest):
     user_msg = f"Create an image generation prompt for this {req.platform} content:\n\n{req.content[:2000]}"
 
     try:
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
                 generator.api_url,
                 json={
@@ -285,31 +292,52 @@ async def generate_image_prompt(req: ImagePromptRequest):
         raise HTTPException(500, f"Failed to generate image prompt: {e}")
 
 
+def _clean_image_prompt(prompt: str) -> str:
+    """Clean up GPT-OSS image prompts - strip markdown, keep it simple for Gemini."""
+    import re as _re
+    prompt = _re.sub(r'\*\*([^*]+)\*\*', r'\1', prompt)
+    prompt = _re.sub(r'\*([^*]+)\*', r'\1', prompt)
+    prompt = _re.sub(r'```[^`]*```', '', prompt, flags=_re.DOTALL)
+    prompt = _re.sub(r'`([^`]+)`', r'\1', prompt)
+    prompt = _re.sub(r'^#+\s+', '', prompt, flags=_re.MULTILINE)
+    prompt = _re.sub(r'^[-*]\s+', '', prompt, flags=_re.MULTILINE)
+    prompt = _re.sub(r'\n{2,}', ' ', prompt)
+    prompt = prompt.strip()
+    if len(prompt) > 300:
+        prompt = prompt[:300]
+    return prompt
+
+
 @app.post("/generate-image")
 async def generate_image(req: ImageGenerateRequest):
-    """Generate an image using Google Gemini API."""
+    """Generate an image using Google Gemini REST API."""
     if not GEMINI_API_KEY:
         raise HTTPException(400, "GEMINI_API_KEY not configured")
 
-    try:
-        from google import genai
+    clean_prompt = _clean_image_prompt(req.prompt)
 
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=req.prompt,
-        )
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            resp = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={GEMINI_API_KEY}",
+                json={
+                    "contents": [{"parts": [{"text": f"Generate an image: {clean_prompt}"}]}],
+                    "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
 
         os.makedirs(IMAGES_DIR, exist_ok=True)
         filename = f"ghostpen-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}.png"
         filepath = os.path.join(IMAGES_DIR, filename)
 
-        if response.candidates and response.candidates[0].content.parts:
-            for part in response.candidates[0].content.parts:
-                if part.inline_data and part.inline_data.mime_type.startswith("image/"):
-                    image_bytes = base64.b64decode(part.inline_data.data)
+        if "candidates" in data and data["candidates"]:
+            for part in data["candidates"][0]["content"]["parts"]:
+                if "inlineData" in part and part["inlineData"]["mimeType"].startswith("image/"):
+                    img_data = base64.b64decode(part["inlineData"]["data"])
                     with open(filepath, "wb") as f:
-                        f.write(image_bytes)
+                        f.write(img_data)
                     return {
                         "image_path": filepath,
                         "image_url": f"/images/{filename}",
@@ -317,8 +345,8 @@ async def generate_image(req: ImageGenerateRequest):
                     }
 
         raise HTTPException(500, "No image returned from Gemini")
-    except ImportError:
-        raise HTTPException(500, "google-genai package not installed. Run: pip install google-genai")
+    except httpx.TimeoutException:
+        raise HTTPException(504, "Image generation timed out. Try a simpler topic.")
     except Exception as e:
         if isinstance(e, HTTPException):
             raise

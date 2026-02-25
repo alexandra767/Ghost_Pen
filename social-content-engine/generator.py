@@ -4,10 +4,40 @@ via OpenAI-compatible API and produces platform-specific content.
 """
 
 import httpx
+import re
 from typing import Optional, Dict
 
 from config import MODEL_ENDPOINT, MODEL_NAME
 from prompts.templates import PLATFORM_PROMPTS, DEFAULTS
+from prompts.wanderlink import WANDERLINK_CONTEXT
+
+
+def strip_emojis(text: str) -> str:
+    """Remove emoji characters from text, preserving normal punctuation and dashes."""
+    # Only target actual emoji ranges, not general Unicode punctuation
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map
+        "\U0001F1E0-\U0001F1FF"  # flags
+        "\U0001F900-\U0001F9FF"  # supplemental symbols
+        "\U0001FA00-\U0001FA6F"  # chess symbols
+        "\U0001FA70-\U0001FAFF"  # symbols extended-A
+        "\U0000FE0F"             # variation selector
+        "\U0000200D"             # zero width joiner
+        "\U00002B50"             # star
+        "\U00002764"             # heart
+        "\U0001F004-\U0001F0CF"  # playing cards
+        "]+",
+        flags=re.UNICODE,
+    )
+    text = emoji_pattern.sub("", text)
+    # Clean up double spaces left behind
+    text = re.sub(r"  +", " ", text)
+    # Clean up leading/trailing spaces on lines
+    text = re.sub(r"^ +", "", text, flags=re.MULTILINE)
+    return text.strip()
 
 
 class ContentGenerator:
@@ -17,6 +47,47 @@ class ContentGenerator:
         self.endpoint = (endpoint or MODEL_ENDPOINT).rstrip("/")
         self.model_name = model_name or MODEL_NAME
         self.api_url = f"{self.endpoint}/v1/chat/completions"
+
+    async def _web_search(self, topic: str) -> str:
+        """Search the web for current info on a topic to enrich content."""
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                # Use DuckDuckGo HTML search (no API key needed)
+                resp = await client.get(
+                    "https://html.duckduckgo.com/html/",
+                    params={"q": topic},
+                    headers={"User-Agent": "Mozilla/5.0"},
+                )
+                if resp.status_code != 200:
+                    return ""
+
+                # Extract text snippets from results
+                import re as _re
+                snippets = _re.findall(
+                    r'<a class="result__snippet"[^>]*>(.*?)</a>',
+                    resp.text,
+                    _re.DOTALL,
+                )
+                if not snippets:
+                    # Try alternate pattern
+                    snippets = _re.findall(
+                        r'class="result__snippet">(.*?)</(?:a|span)>',
+                        resp.text,
+                        _re.DOTALL,
+                    )
+
+                # Clean HTML tags from snippets
+                clean = []
+                for s in snippets[:5]:
+                    s = _re.sub(r"<[^>]+>", "", s).strip()
+                    if s:
+                        clean.append(s)
+
+                if clean:
+                    return "CURRENT WEB CONTEXT (use this for up-to-date info):\n" + "\n".join(f"- {s}" for s in clean)
+                return ""
+        except Exception:
+            return ""
 
     async def generate(
         self,
@@ -33,6 +104,9 @@ class ContentGenerator:
 
         prompt_config = PLATFORM_PROMPTS[platform]
 
+        # Search the web for current context on the topic
+        web_context = await self._web_search(topic)
+
         # Build template variables with defaults
         template_vars = {
             "topic": topic,
@@ -43,12 +117,24 @@ class ContentGenerator:
 
         user_message = prompt_config["template"].format(**template_vars)
 
+        # Inject WanderLink context when topic is about the app
+        topic_lower = topic.lower()
+        is_wanderlink = any(kw in topic_lower for kw in ["wanderlink", "wander link", "wander-link"])
+
+        # Append web context if found (skip for twitter - model returns empty)
+        if web_context and platform != "twitter":
+            user_message += f"\n\n{web_context}"
+
+        system_prompt = prompt_config["system"]
+        if is_wanderlink:
+            system_prompt += "\n\n" + WANDERLINK_CONTEXT
+
         messages = [
-            {"role": "developer", "content": prompt_config["system"]},
+            {"role": "developer", "content": system_prompt},
             {"role": "user", "content": user_message},
         ]
 
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
                 self.api_url,
                 json={
@@ -61,7 +147,12 @@ class ContentGenerator:
             )
             response.raise_for_status()
             result = response.json()
-            return result["choices"][0]["message"]["content"]
+            content = result["choices"][0]["message"]["content"]
+
+            # Strip emojis - GPT-OSS ignores prompt instructions about this
+            content = strip_emojis(content)
+
+            return content
 
     async def generate_all(
         self,
@@ -86,7 +177,8 @@ class ContentGenerator:
         """Check if the model server is reachable."""
         try:
             async with httpx.AsyncClient(timeout=5) as client:
-                resp = await client.get(f"{self.endpoint}/health")
+                # Ollama uses / as its health endpoint (returns "Ollama is running")
+                resp = await client.get(f"{self.endpoint}/")
                 return resp.status_code == 200
         except Exception:
             return False
