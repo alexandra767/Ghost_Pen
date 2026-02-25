@@ -48,7 +48,7 @@ PLATFORM_PROMPTS = {
             "or say something relatable."
         ),
         "template": "Write a single tweet about: {topic}",
-        "max_tokens": 150,
+        "max_tokens": 512,
         "temperature": 0.9,
     },
     "instagram": {

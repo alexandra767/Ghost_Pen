@@ -86,6 +86,20 @@ export function getImageUrl(imageUrl: string): string {
   return `${API_BASE}${imageUrl}`;
 }
 
+// === Model Control ===
+
+export async function stopModel(): Promise<{ success: boolean; message?: string }> {
+  return apiFetch("/model/stop", { method: "POST" });
+}
+
+export async function startModel(): Promise<{ success: boolean; message?: string }> {
+  return apiFetch("/model/start", { method: "POST" });
+}
+
+export async function getModelStatus(): Promise<{ model: string; loaded: boolean }> {
+  return apiFetch("/model/status");
+}
+
 // === Blog API ===
 
 export interface BlogPostAPI {

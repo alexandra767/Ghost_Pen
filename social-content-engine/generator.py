@@ -175,8 +175,10 @@ class ContentGenerator:
                 )
             elif platform == "twitter":
                 user_message += (
-                    "\n\nMANDATORY: You MUST include wander-link.com somewhere in the tweet. "
-                    "Do NOT skip this link. It must appear in the final output."
+                    "\n\nMANDATORY: You MUST include BOTH links in the tweet:\n"
+                    "- https://wander-link.com\n"
+                    "- https://apps.apple.com/us/app/travel-planner-wanderlink/id6747599042\n"
+                    "Do NOT skip these links. They must appear in the final output."
                 )
 
         messages = [

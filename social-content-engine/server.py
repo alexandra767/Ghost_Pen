@@ -386,5 +386,60 @@ async def serve_image(filename: str):
     return FileResponse(filepath, media_type="image/png")
 
 
+# === Model Control Endpoints ===
+
+@app.post("/model/stop")
+async def stop_model():
+    """Unload the model from Ollama to free GPU memory."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            # Ollama unloads model when keep_alive is set to 0
+            resp = await client.post(
+                f"{generator.endpoint}/api/generate",
+                json={"model": generator.model_name, "keep_alive": 0},
+            )
+            if resp.status_code == 200:
+                return {"success": True, "message": f"Model {generator.model_name} unloaded from GPU"}
+            return {"success": False, "error": f"Ollama returned {resp.status_code}"}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to stop model: {e}")
+
+
+@app.post("/model/start")
+async def start_model():
+    """Pre-load the model into Ollama (warms up GPU)."""
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            resp = await client.post(
+                f"{generator.endpoint}/api/generate",
+                json={"model": generator.model_name, "prompt": "", "keep_alive": "10m"},
+            )
+            if resp.status_code == 200:
+                return {"success": True, "message": f"Model {generator.model_name} loaded to GPU"}
+            return {"success": False, "error": f"Ollama returned {resp.status_code}"}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to start model: {e}")
+
+
+@app.get("/model/status")
+async def model_status():
+    """Check if the model is currently loaded."""
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(f"{generator.endpoint}/api/ps")
+            if resp.status_code == 200:
+                data = resp.json()
+                models = data.get("models", [])
+                loaded = any(m.get("name", "").startswith(generator.model_name.split(":")[0]) for m in models)
+                return {
+                    "model": generator.model_name,
+                    "loaded": loaded,
+                    "models": [m.get("name") for m in models],
+                }
+            return {"model": generator.model_name, "loaded": False}
+    except Exception:
+        return {"model": generator.model_name, "loaded": False, "server": "unreachable"}
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=ENGINE_PORT)

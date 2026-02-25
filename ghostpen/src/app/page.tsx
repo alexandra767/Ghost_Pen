@@ -63,7 +63,11 @@ export default function Dashboard() {
 
         for (const p of ordered) {
           try {
-            const r = await generateContent(topic, p, tone, wordCount, isWanderlink);
+            let r = await generateContent(topic, p, tone, wordCount, isWanderlink);
+            // Retry once if content came back empty (common with Twitter)
+            if (!r.content[p]) {
+              r = await generateContent(topic, p, tone, wordCount, isWanderlink);
+            }
             setGeneratedContent((prev) => ({ ...prev, ...r.content }));
             if (!firstContent && r.content[p] && !r.content[p].startsWith("[ERROR")) {
               firstContent = r.content[p];
@@ -153,11 +157,11 @@ export default function Dashboard() {
                 Generated Content
               </h2>
               {selectedPlatforms.map((platform) =>
-                generatedContent[platform] ? (
+                generatedContent[platform] !== undefined ? (
                   <ContentCard
                     key={platform}
                     platform={platform}
-                    content={generatedContent[platform]}
+                    content={generatedContent[platform] || "[Generation returned empty — try again]"}
                     onPost={handlePost}
                     imagePath={imagePath || undefined}
                   />

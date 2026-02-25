@@ -19,12 +19,20 @@ const PLATFORM_CONFIG: Record<Platform, { icon: React.ReactNode; label: string; 
 };
 
 function linkifyText(text: string) {
-  const splitRegex = /(https?:\/\/[^\s]+)/g;
+  // Match full URLs and bare domains like wander-link.com
+  const splitRegex = /(https?:\/\/[^\s]+|(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b[^\s]*)/g;
   const parts = text.split(splitRegex);
   return parts.map((part, i) => {
     if (/^https?:\/\//.test(part)) {
       return (
         <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
+          {part}
+        </a>
+      );
+    }
+    if (/^(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b/.test(part)) {
+      return (
+        <a key={i} href={`https://${part}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
           {part}
         </a>
       );
