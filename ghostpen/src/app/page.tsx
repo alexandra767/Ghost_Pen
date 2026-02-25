@@ -41,7 +41,7 @@ export default function Dashboard() {
   }, []);
 
   const handleGenerate = useCallback(
-    async (topic: string, platforms: Platform[], tone: Tone, wordCount: number) => {
+    async (topic: string, platforms: Platform[], tone: Tone, wordCount: number, isWanderlink: boolean = false) => {
       setIsGenerating(true);
       setError("");
       setGeneratedContent({});
@@ -63,7 +63,7 @@ export default function Dashboard() {
 
         for (const p of ordered) {
           try {
-            const r = await generateContent(topic, p, tone, wordCount);
+            const r = await generateContent(topic, p, tone, wordCount, isWanderlink);
             setGeneratedContent((prev) => ({ ...prev, ...r.content }));
             if (!firstContent && r.content[p] && !r.content[p].startsWith("[ERROR")) {
               firstContent = r.content[p];

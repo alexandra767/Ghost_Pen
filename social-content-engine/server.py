@@ -87,6 +87,7 @@ class GenerateRequest(BaseModel):
     image_description: Optional[str] = None
     auto_post: bool = False
     image_path: Optional[str] = None  # For Instagram posting
+    is_wanderlink: bool = False  # Force WanderLink context injection
 
 class GenerateResponse(BaseModel):
     content: Dict[str, str] = {}
@@ -119,6 +120,7 @@ async def generate_content(req: GenerateRequest):
                 tone=req.tone,
                 word_count=req.word_count,
                 image_description=req.image_description,
+                is_wanderlink=req.is_wanderlink,
             )
         except Exception as e:
             content[platform] = f"[ERROR: {e}]"
@@ -260,6 +262,10 @@ class ImageGenerateRequest(BaseModel):
 @app.post("/generate-image-prompt")
 async def generate_image_prompt(req: ImagePromptRequest):
     """Use GPT-OSS to create an image generation prompt from content."""
+    # Detect if content is about WanderLink
+    content_lower = req.content.lower()
+    is_wanderlink = any(kw in content_lower for kw in ["wanderlink", "wander link", "wander-link"])
+
     system = (
         "You are an expert at writing image generation prompts. "
         "Given a piece of written content, create a single descriptive prompt "
@@ -268,6 +274,24 @@ async def generate_image_prompt(req: ImagePromptRequest):
         "Focus on mood, lighting, composition, and subject matter. "
         "Output ONLY the image prompt, nothing else. Keep it under 200 words."
     )
+
+    if is_wanderlink:
+        system += (
+            "\n\nIMPORTANT: This content is about WanderLink, a travel planning app. "
+            "The image should be TRAVEL-FOCUSED and relevant to the specific topic. "
+            "Think: stunning travel destinations, a traveler exploring a beautiful city, "
+            "a person discovering a hidden gem cafe or scenic overlook, someone planning "
+            "a trip with a phone showing a map, a solo traveler at an amazing viewpoint, "
+            "golden hour at a famous landmark, cozy street scenes in a foreign city, "
+            "or an adventurer with a backpack overlooking a breathtaking landscape. "
+            "Match the image to the SPECIFIC feature or travel scenario discussed in the content. "
+            "For example: if the content is about hidden gems, show an off-the-beaten-path discovery; "
+            "if about safety features, show a confident solo traveler; "
+            "if about AI trip planning, show a traveler with an itinerary at a destination. "
+            "Style: high-quality travel photography, warm natural lighting, aspirational but authentic. "
+            "Do NOT generate screenshots, app mockups, or UI elements — generate beautiful travel scenes."
+        )
+
     user_msg = f"Create an image generation prompt for this {req.platform} content:\n\n{req.content[:2000]}"
 
     try:

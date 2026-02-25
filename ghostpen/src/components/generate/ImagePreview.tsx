@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ImageIcon, RefreshCw, Loader2, Edit3 } from "lucide-react";
+import { ImageIcon, RefreshCw, Loader2, Edit3, Download } from "lucide-react";
 import { getImageUrl } from "@/lib/api";
 
 interface ImagePreviewProps {
@@ -43,13 +43,33 @@ export default function ImagePreview({
             <span className="text-sm">Generating image from your content...</span>
           </div>
         ) : imageUrl ? (
-          <div className="relative">
+          <div className="relative group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={getImageUrl(imageUrl)}
               alt="Generated content image"
               className="w-full rounded-lg"
             />
+            <button
+              onClick={async () => {
+                try {
+                  const resp = await fetch(getImageUrl(imageUrl));
+                  const blob = await resp.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = imageUrl.split("/").pop() || "ghostpen-image.png";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                } catch { /* ignore */ }
+              }}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100"
+              title="Download image"
+            >
+              <Download className="w-4 h-4" />
+            </button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-muted gap-2">

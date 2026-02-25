@@ -5,7 +5,7 @@ import { Sparkles, BookOpen, Twitter, Instagram, Loader2, MapPin } from "lucide-
 import type { Platform, Tone } from "@/types";
 
 interface TopicFormProps {
-  onGenerate: (topic: string, platforms: Platform[], tone: Tone, wordCount: number) => void;
+  onGenerate: (topic: string, platforms: Platform[], tone: Tone, wordCount: number, isWanderlink: boolean) => void;
   isLoading: boolean;
 }
 
@@ -52,10 +52,11 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic.trim() || selectedPlatforms.length === 0) return;
-    onGenerate(topic, selectedPlatforms, tone, wordCount);
+    onGenerate(topic, selectedPlatforms, tone, wordCount, isWanderlinkTopic);
   };
 
   const [showWanderLink, setShowWanderLink] = useState(false);
+  const [isWanderlinkTopic, setIsWanderlinkTopic] = useState(false);
 
   return (
     <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm border border-border p-6 space-y-5">
@@ -78,7 +79,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
         </div>
         <textarea
           value={topic}
-          onChange={(e) => setTopic(e.target.value)}
+          onChange={(e) => { setTopic(e.target.value); setIsWanderlinkTopic(false); }}
           placeholder="What do you want to write about?"
           className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted/50 focus:outline-none focus:border-terracotta/50 focus:ring-1 focus:ring-terracotta/20 transition-colors min-h-[80px]"
           rows={2}
@@ -96,6 +97,7 @@ export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
                 type="button"
                 onClick={() => {
                   setTopic(t);
+                  setIsWanderlinkTopic(true);
                   setShowWanderLink(false);
                 }}
                 className="text-sm px-3 py-2 rounded-full bg-blue-600/30 text-white hover:bg-blue-500/50 transition-colors text-left"

@@ -18,6 +18,21 @@ const PLATFORM_CONFIG: Record<Platform, { icon: React.ReactNode; label: string; 
   instagram: { icon: <Instagram className="w-4 h-4" />, label: "Instagram", maxLen: 2200 },
 };
 
+function linkifyText(text: string) {
+  const splitRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(splitRegex);
+  return parts.map((part, i) => {
+    if (/^https?:\/\//.test(part)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export default function ContentCard({ platform, content, onPost, imagePath }: ContentCardProps) {
   const [copied, setCopied] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -80,7 +95,7 @@ export default function ContentCard({ platform, content, onPost, imagePath }: Co
           </div>
         ) : (
           <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto">
-            {displayContent}
+            {linkifyText(displayContent)}
           </p>
         )}
       </div>

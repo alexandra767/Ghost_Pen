@@ -28,7 +28,8 @@ export async function generateContent(
   topic: string,
   platform: string,
   tone: string,
-  wordCount: number
+  wordCount: number,
+  isWanderlink: boolean = false
 ): Promise<GenerateResponse> {
   return apiFetch<GenerateResponse>("/generate", {
     method: "POST",
@@ -38,6 +39,7 @@ export async function generateContent(
       tone,
       word_count: wordCount,
       auto_post: false,
+      is_wanderlink: isWanderlink,
     }),
   });
 }
