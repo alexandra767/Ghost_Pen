@@ -156,6 +156,28 @@ class ContentGenerator:
         if is_wanderlink:
             system_prompt += "\n\n" + WANDERLINK_CONTEXT
 
+            # Detect full feature showcase request
+            is_full_feature = any(kw in topic_lower for kw in ["all features", "full feature", "every feature", "feature showcase"])
+            if is_full_feature:
+                if platform == "instagram":
+                    user_message += (
+                        "\n\nIMPORTANT: This is a FULL FEATURE SHOWCASE post. List ALL WanderLink features "
+                        "using the condensed format from the FULL FEATURE SHOWCASE FORMAT section. "
+                        "You MUST fit under 2,200 characters total (Instagram caption limit). "
+                        "Use short one-liner descriptions grouped by category. No long paragraphs."
+                    )
+                elif platform == "twitter":
+                    user_message += (
+                        "\n\nIMPORTANT: This is a FULL FEATURE SHOWCASE. Pick the 5-6 most impressive "
+                        "features and write a punchy tweet highlighting them. Must fit 280 chars."
+                    )
+                elif platform == "blog":
+                    user_message += (
+                        "\n\nIMPORTANT: This is a FULL FEATURE SHOWCASE post. Write a detailed "
+                        "feature-by-feature breakdown covering ALL WanderLink features with "
+                        "descriptions and real use cases for each one."
+                    )
+
             # Force links into the user message per platform
             if platform == "blog":
                 user_message += (

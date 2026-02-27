@@ -28,13 +28,19 @@ const WANDERLINK_TOPICS = [
   "Planning your next trip in 5 minutes with AI-powered itineraries",
   "The end of 20 open browser tabs: how one app replaced my entire travel toolkit",
   "Meeting fellow travelers safely with WanderLink's Nearby feature",
-  "How WanderLink's AR discovery lets you point your camera and explore",
   "Budget travel made easy: splitting bills and tracking expenses on the go",
   "From solo founder to App Store: the story behind WanderLink",
-  "5 hidden gem destinations WanderLink's AI recommends for winter travel",
+  "5 hidden gem destinations WanderLink's AI recommends for spring travel",
   "Why every solo traveler needs a safety-first travel companion app",
   "WanderLink's Daily Digest: your personal AI travel concierge",
   "Walking tours, local food, and off-the-beaten-path adventures with WanderLink",
+  "WanderLink's new iOS widgets: your trip countdown right on your home screen",
+  "How WanderLink works in 150+ countries — even without internet",
+  "Track your travel stats: WanderLink's new analytics dashboard",
+  "Android is coming: the WanderLink expansion story",
+  "QR code payment splits: the easiest way to split travel expenses",
+  "WanderLink's redesigned Discovery tab: find events, tours, and weather in one tap",
+  "WanderLink full feature showcase: every tool in one travel app",
 ];
 
 export default function TopicForm({ onGenerate, isLoading }: TopicFormProps) {
