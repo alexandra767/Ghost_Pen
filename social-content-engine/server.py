@@ -277,19 +277,21 @@ async def generate_image_prompt(req: ImagePromptRequest):
 
     if is_wanderlink:
         system += (
-            "\n\nIMPORTANT: This content is about WanderLink, a travel planning app. "
-            "The image should be TRAVEL-FOCUSED and relevant to the specific topic. "
-            "Think: stunning travel destinations, a traveler exploring a beautiful city, "
-            "a person discovering a hidden gem cafe or scenic overlook, someone planning "
-            "a trip with a phone showing a map, a solo traveler at an amazing viewpoint, "
-            "golden hour at a famous landmark, cozy street scenes in a foreign city, "
-            "or an adventurer with a backpack overlooking a breathtaking landscape. "
-            "Match the image to the SPECIFIC feature or travel scenario discussed in the content. "
-            "For example: if the content is about hidden gems, show an off-the-beaten-path discovery; "
-            "if about safety features, show a confident solo traveler; "
-            "if about AI trip planning, show a traveler with an itinerary at a destination. "
-            "Style: high-quality travel photography, warm natural lighting, aspirational but authentic. "
-            "Do NOT generate screenshots, app mockups, or UI elements — generate beautiful travel scenes."
+            "\n\nCRITICAL: This content is about WanderLink, a travel companion app. "
+            "You MUST generate an image prompt for a TRAVEL SCENE. "
+            "DO NOT describe app screens, UI mockups, logos, text overlays, or technology. "
+            "DO NOT include the word 'app' or 'phone' or 'screen' in your prompt. "
+            "INSTEAD describe a beautiful real-world travel photograph such as: "
+            "a solo traveler standing at a stunning overlook at golden hour, "
+            "a hidden cobblestone alley in a European city with warm cafe lights, "
+            "a backpacker discovering a secret beach with turquoise water, "
+            "a traveler walking through a vibrant street market in Southeast Asia, "
+            "or an adventurer at the edge of a mountain trail with epic views. "
+            "Match the scene to the SPECIFIC topic: hidden gems = off-the-beaten-path discovery; "
+            "safety = confident solo female traveler exploring; budget = street food market; "
+            "events = live outdoor concert with crowd energy; trip planning = traveler with a map at a cafe. "
+            "Style: professional travel photography, warm natural lighting, 35mm lens feel, "
+            "rich colors, aspirational but authentic. Think National Geographic or Lonely Planet cover."
         )
 
     user_msg = f"Create an image generation prompt for this {req.platform} content:\n\n{req.content[:2000]}"
@@ -339,6 +341,20 @@ async def generate_image(req: ImageGenerateRequest):
         raise HTTPException(400, "GEMINI_API_KEY not configured")
 
     clean_prompt = _clean_image_prompt(req.prompt)
+
+    # If the prompt doesn't already mention travel-related words, and it came from
+    # a WanderLink generation, prefix with travel photography context
+    prompt_lower = clean_prompt.lower()
+    travel_words = ["travel", "destination", "backpack", "explorer", "wanderer", "tourist",
+                     "landscape", "overlook", "beach", "market", "cafe", "city street",
+                     "adventure", "journey", "traveler", "hiking", "scenic"]
+    has_travel_context = any(w in prompt_lower for w in travel_words)
+    if not has_travel_context:
+        clean_prompt = (
+            "Beautiful travel photography: " + clean_prompt
+            + ". Style: professional travel photograph, warm natural lighting, rich colors, "
+            "35mm lens, aspirational and authentic. No text, no UI, no app screens."
+        )
 
     try:
         async with httpx.AsyncClient(timeout=90) as client:

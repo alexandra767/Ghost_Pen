@@ -19,27 +19,46 @@ const PLATFORM_CONFIG: Record<Platform, { icon: React.ReactNode; label: string; 
 };
 
 function linkifyText(text: string) {
+  // First convert markdown links [text](url) to just the URL so they get linkified
+  const withoutMdLinks = text.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$2');
   // Match full URLs and bare domains like wander-link.com
-  const splitRegex = /(https?:\/\/[^\s]+|(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b[^\s]*)/g;
-  const parts = text.split(splitRegex);
+  const splitRegex = /(https?:\/\/[^\s)]+|(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b[^\s)*]*)/g;
+  const parts = withoutMdLinks.split(splitRegex);
   return parts.map((part, i) => {
-    if (/^https?:\/\//.test(part)) {
+    // Strip trailing punctuation that's not part of the URL
+    const cleaned = part.replace(/[.,;:!?)]+$/, '');
+    const trailing = part.slice(cleaned.length);
+    if (/^https?:\/\//.test(cleaned)) {
       return (
-        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
-          {part}
-        </a>
+        <span key={i}>
+          <a href={cleaned} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
+            {cleaned}
+          </a>
+          {trailing}
+        </span>
       );
     }
-    if (/^(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b/.test(part)) {
+    if (/^(?:[\w-]+\.)+(?:com|org|net|io|app|dev|co)\b/.test(cleaned)) {
       return (
-        <a key={i} href={`https://${part}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
-          {part}
-        </a>
+        <span key={i}>
+          <a href={`https://${cleaned}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 break-all">
+            {cleaned}
+          </a>
+          {trailing}
+        </span>
       );
     }
     return <span key={i}>{part}</span>;
   });
 }
+
+const markdownLinkComponents = {
+  a: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300" {...props}>
+      {children}
+    </a>
+  ),
+};
 
 export default function ContentCard({ platform, content, onPost, imagePath }: ContentCardProps) {
   const [copied, setCopied] = useState(false);
@@ -99,7 +118,7 @@ export default function ContentCard({ platform, content, onPost, imagePath }: Co
           />
         ) : platform === "blog" ? (
           <div className="prose-ghost text-sm text-foreground/90 max-h-[400px] overflow-y-auto">
-            <ReactMarkdown>{displayContent}</ReactMarkdown>
+            <ReactMarkdown components={markdownLinkComponents}>{displayContent}</ReactMarkdown>
           </div>
         ) : (
           <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto">
